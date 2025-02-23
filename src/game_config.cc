@@ -148,6 +148,9 @@ bool gameConfigInit(bool isMapper, int argc, char** argv)
         ? customConfigFileName
         : DEFAULT_GAME_CONFIG_FILE_NAME;
 
+#ifdef __3DS__
+    strcpy(gGameConfigFilePath, "sdmc:/3ds/fallout2/fallout2.cfg");
+#else
     // Make `fallout2.cfg` file path.
     char* executable = argv[0];
     char* ch = strrchr(executable, '\\');
@@ -174,7 +177,7 @@ bool gameConfigInit(bool isMapper, int argc, char** argv)
             strcpy(gGameConfigFilePath, configFileName);
         }
     }
-
+#endif
     // Read contents of `fallout2.cfg` into config. The values from the file
     // will override the defaults above.
     configRead(&gGameConfig, gGameConfigFilePath, false);

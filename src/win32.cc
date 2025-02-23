@@ -16,6 +16,15 @@
 #include "platform/ios/paths.h"
 #endif
 
+#ifdef __3DS__
+#include "3ds.h"
+
+u32 __ctru_heap_size = 0;
+u32 __ctru_linear_heap_size = 32 * 1024 * 1024;
+u32 __stacksize__ = 64 * 1024;
+
+#endif
+
 namespace fallout {
 
 // 0x51E444
@@ -54,6 +63,14 @@ int main(int argc, char* argv[])
     chdir(SDL_AndroidGetExternalStoragePath());
 #endif
 
+#ifdef __3DS__
+    SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
+    SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
+
+    osSetSpeedupEnable(true);
+    chdir("sdmc:/3ds/fallout2/");
+#else
+
     if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
         return EXIT_FAILURE;
     }
@@ -61,7 +78,7 @@ int main(int argc, char* argv[])
     atexit(SDL_Quit);
 
     SDL_ShowCursor(SDL_DISABLE);
-
+#endif
     gProgramIsActive = true;
     rc = falloutMain(argc, argv);
 

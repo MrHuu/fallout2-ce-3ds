@@ -73,7 +73,9 @@ int audioFileOpen(const char* fname, int* sampleRate)
     if (stream == nullptr) {
         return -1;
     }
-
+#ifdef __3DS__
+    setvbuf(stream, NULL, _IOFBF, (32 * 1024));
+#endif
     int index;
     for (index = 0; index < gAudioFileListLength; index++) {
         if ((gAudioFileList[index].flags & AUDIO_FILE_IN_USE) == 0) {

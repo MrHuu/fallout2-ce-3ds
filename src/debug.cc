@@ -127,6 +127,9 @@ void _debug_register_func(DebugPrintProc* proc)
 // 0x4C6F48
 int debugPrint(const char* format, ...)
 {
+#ifdef __3DS__
+return 0;
+#endif
     va_list args;
     va_start(args, format);
 

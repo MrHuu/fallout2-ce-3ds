@@ -3,7 +3,11 @@
 #include <stddef.h>
 #include <string.h>
 
+#ifdef __3DS__
+#include <fpattern.h>
+#else
 #include <fpattern/fpattern.h>
+#endif
 
 namespace fallout {
 

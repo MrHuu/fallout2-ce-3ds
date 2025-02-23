@@ -14,6 +14,11 @@
 #include "window_manager.h"
 #include "window_manager_private.h"
 
+#ifdef __3DS__
+#include "platform/ctr/ctr_gfx.h"
+#include "platform/ctr/ctr_rectmap.h"
+#endif
+
 namespace fallout {
 
 static bool createRenderer(int width, int height);
@@ -172,6 +177,14 @@ int _init_vesa_mode(int width, int height)
 // 0x4CAEDC
 int _GNW95_init_window(int width, int height, bool fullscreen, int scale)
 {
+#ifdef __3DS__
+    if((SDL_Init(SDL_INIT_VIDEO)==-1)) {
+//        GNWSystemError("Could not initialize SDL\n");
+    }
+
+    ctr_gfx_init();
+    ctr_rectmap_init();
+#else
     if (gSdlWindow == nullptr) {
         SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
 
@@ -195,7 +208,7 @@ int _GNW95_init_window(int width, int height, bool fullscreen, int scale)
             return -1;
         }
     }
-
+#endif
     return 0;
 }
 
@@ -255,7 +268,9 @@ void directDrawSetPaletteInRange(unsigned char* palette, int start, int count)
         }
 
         SDL_SetPaletteColors(gSdlSurface->format->palette, colors, start, count);
+#ifndef __3DS__
         SDL_BlitSurface(gSdlSurface, nullptr, gSdlTextureSurface, nullptr);
+#endif
     }
 }
 
@@ -273,7 +288,9 @@ void directDrawSetPalette(unsigned char* palette)
         }
 
         SDL_SetPaletteColors(gSdlSurface->format->palette, colors, 0, 256);
+#ifndef __3DS__
         SDL_BlitSurface(gSdlSurface, nullptr, gSdlTextureSurface, nullptr);
+#endif
     }
 }
 
@@ -301,7 +318,7 @@ unsigned char* directDrawGetPalette()
 void _GNW95_ShowRect(unsigned char* src, int srcPitch, int a3, int srcX, int srcY, int srcWidth, int srcHeight, int destX, int destY)
 {
     blitBufferToBuffer(src + srcPitch * srcY + srcX, srcWidth, srcHeight, srcPitch, (unsigned char*)gSdlSurface->pixels + gSdlSurface->pitch * destY + destX, gSdlSurface->pitch);
-
+#ifndef __3DS__
     SDL_Rect srcRect;
     srcRect.x = destX;
     srcRect.y = destY;
@@ -312,6 +329,7 @@ void _GNW95_ShowRect(unsigned char* src, int srcPitch, int a3, int srcX, int src
     destRect.x = destX;
     destRect.y = destY;
     SDL_BlitSurface(gSdlSurface, &srcRect, gSdlTextureSurface, &destRect);
+#endif
 }
 
 // Clears drawing surface.
@@ -328,8 +346,9 @@ void _GNW95_zero_vid_mem()
         memset(surface, 0, gSdlSurface->w);
         surface += gSdlSurface->pitch;
     }
-
+#ifndef __3DS__
     SDL_BlitSurface(gSdlSurface, nullptr, gSdlTextureSurface, nullptr);
+#endif
 }
 
 int screenGetWidth()
@@ -356,6 +375,7 @@ int screenGetVisibleHeight()
 
 static bool createRenderer(int width, int height)
 {
+#ifndef __3DS__
     gSdlRenderer = SDL_CreateRenderer(gSdlWindow, -1, 0);
     if (gSdlRenderer == nullptr) {
         return false;
@@ -379,12 +399,16 @@ static bool createRenderer(int width, int height)
     if (gSdlTextureSurface == nullptr) {
         return false;
     }
-
+#endif
     return true;
 }
 
 static void destroyRenderer()
 {
+#ifdef __3DS__
+    ctr_gfx_exit();
+    ctr_rectmap_exit();
+#else
     if (gSdlTextureSurface != nullptr) {
         SDL_FreeSurface(gSdlTextureSurface);
         gSdlTextureSurface = nullptr;
@@ -399,6 +423,7 @@ static void destroyRenderer()
         SDL_DestroyRenderer(gSdlRenderer);
         gSdlRenderer = nullptr;
     }
+#endif
 }
 
 void handleWindowSizeChanged()
@@ -409,10 +434,14 @@ void handleWindowSizeChanged()
 
 void renderPresent()
 {
+#ifdef __3DS__
+    ctr_gfx_draw(gSdlSurface);
+#else
     SDL_UpdateTexture(gSdlTexture, nullptr, gSdlTextureSurface->pixels, gSdlTextureSurface->pitch);
     SDL_RenderClear(gSdlRenderer);
     SDL_RenderCopy(gSdlRenderer, gSdlTexture, nullptr, nullptr);
     SDL_RenderPresent(gSdlRenderer);
+#endif
 }
 
 } // namespace fallout

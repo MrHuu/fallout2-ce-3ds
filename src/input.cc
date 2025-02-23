@@ -15,6 +15,10 @@
 #include "touch.h"
 #include "win32.h"
 
+#ifdef __3DS__
+#include "platform/ctr/ctr_input.h"
+#endif
+
 namespace fallout {
 
 typedef struct InputEvent {
@@ -101,6 +105,9 @@ static unsigned int gTickerLastTimestamp;
 // 0x4C8A70
 int inputInit(int a1)
 {
+#ifdef __3DS__
+    ctr_input_init();
+#endif
     if (!directInputInit()) {
         return -1;
     }
@@ -136,6 +143,9 @@ int inputInit(int a1)
 // 0x4C8B40
 void inputExit()
 {
+#ifdef __3DS__
+    ctr_input_exit();
+#endif
     _GNW95_input_init();
     mouseFree();
     keyboardFree();
@@ -153,14 +163,18 @@ void inputExit()
 int inputGetInput()
 {
     int v3;
-
+#ifndef __3DS__
     _GNW95_process_message();
 
     if (!gProgramIsActive) {
         _GNW95_lost_focus();
     }
-
+#endif
     _process_bk();
+
+#ifdef __3DS__
+    ctr_input_process();
+#endif
 
     v3 = dequeueInputEvent();
     if (v3 == -1 && mouseGetEvent() & 0x33) {

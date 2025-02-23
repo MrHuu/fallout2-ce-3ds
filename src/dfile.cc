@@ -7,7 +7,11 @@
 
 #include <algorithm>
 
+#ifdef __3DS__
+#include <fpattern.h>
+#else
 #include <fpattern/fpattern.h>
+#endif
 
 #include "platform_compat.h"
 
@@ -54,7 +58,9 @@ DBase* dbaseOpen(const char* filePath)
     if (stream == nullptr) {
         return nullptr;
     }
-
+#ifdef __3DS__
+    setvbuf(stream, NULL, _IOFBF, (64 * 1024));
+#endif
     DBase* dbase = (DBase*)malloc(sizeof(*dbase));
     if (dbase == nullptr) {
         fclose(stream);
@@ -673,7 +679,9 @@ static DFile* dfileOpenInternal(DBase* dbase, const char* filePath, const char* 
     if (dfile->stream == nullptr) {
         goto err;
     }
-
+#ifdef __3DS__
+    setvbuf(dfile->stream, NULL, _IOFBF, (32 * 1024));
+#endif
     // Relocate stream to the beginning of data for specified entry.
     if (fseek(dfile->stream, dbase->dataOffset + entry->dataOffset, SEEK_SET) != 0) {
         goto err;

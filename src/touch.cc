@@ -5,6 +5,12 @@
 
 #include "svga.h"
 
+#ifdef __3DS__
+#include "platform/ctr/ctr_input.h"
+#include "platform/ctr/ctr_rectmap.h"
+#include "mouse.h"
+#endif
+
 namespace fallout {
 
 #define TOUCH_PHASE_BEGAN 0
@@ -14,7 +20,11 @@ namespace fallout {
 #define MAX_TOUCHES 10
 
 #define TAP_MAXIMUM_DURATION 75
+#ifdef __3DS__
+#define PAN_MINIMUM_MOVEMENT 16
+#else
 #define PAN_MINIMUM_MOVEMENT 4
+#endif
 #define LONG_PRESS_MINIMUM_DURATION 500
 
 struct TouchLocation {
@@ -99,8 +109,12 @@ void touch_handle_start(SDL_TouchFingerEvent* event)
         touch->used = true;
         touch->fingerId = event->fingerId;
         touch->startTimestamp = event->timestamp;
+#ifdef __3DS__
+        ctr_input_get_touch(&touch->startLocation.x, &touch->startLocation.y);
+#else
         touch->startLocation.x = static_cast<int>(event->x * screenGetWidth());
         touch->startLocation.y = static_cast<int>(event->y * screenGetHeight());
+#endif
         touch->currentTimestamp = touch->startTimestamp;
         touch->currentLocation = touch->startLocation;
         touch->phase = TOUCH_PHASE_BEGAN;
@@ -113,8 +127,12 @@ void touch_handle_move(SDL_TouchFingerEvent* event)
     if (index != -1) {
         Touch* touch = &(touches[index]);
         touch->currentTimestamp = event->timestamp;
+#ifdef __3DS__
+        ctr_input_get_touch(&touch->currentLocation.x, &touch->currentLocation.y);
+#else
         touch->currentLocation.x = static_cast<int>(event->x * screenGetWidth());
         touch->currentLocation.y = static_cast<int>(event->y * screenGetHeight());
+#endif
         touch->phase = TOUCH_PHASE_MOVED;
     }
 }
@@ -125,8 +143,12 @@ void touch_handle_end(SDL_TouchFingerEvent* event)
     if (index != -1) {
         Touch* touch = &(touches[index]);
         touch->currentTimestamp = event->timestamp;
+#ifdef __3DS__
+        ctr_input_get_touch(&touch->currentLocation.x, &touch->currentLocation.y);
+#else
         touch->currentLocation.x = static_cast<int>(event->x * screenGetWidth());
         touch->currentLocation.y = static_cast<int>(event->y * screenGetHeight());
+#endif
         touch->phase = TOUCH_PHASE_ENDED;
     }
 }
@@ -271,6 +293,18 @@ void touch_process_gesture()
                 currentGesture.y = currentCentroid.y;
                 gestureEventsQueue.push(currentGesture);
             }
+#ifdef __3DS__
+            int newX = -1;
+            int newY = -1;
+
+            ctr_input_get_touch(&newX, &newY);
+            if ((newX != -1) || (newY != -1))
+            {
+                mouseHideCursor();
+                _mouse_set_position(newX, newY);
+                mouseShowCursor();
+            }
+#endif
         }
     }
 }

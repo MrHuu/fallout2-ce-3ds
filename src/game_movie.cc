@@ -21,6 +21,11 @@
 #include "touch.h"
 #include "window_manager.h"
 
+#ifdef __3DS__
+#include "platform/ctr/ctr_rectmap.h"
+#include "platform/ctr/ctr_input.h"
+#endif
+
 namespace fallout {
 
 #define GAME_MOVIE_WINDOW_WIDTH 640
@@ -189,6 +194,10 @@ int gameMoviePlay(int movie, int flags)
         backgroundSoundPause();
     }
 
+#ifdef __3DS__
+    setActiveRectMap(DISPLAY_MOVIE);
+#endif
+
     windowRefresh(win);
 
     bool subtitlesEnabled = settings.preferences.subtitles;
@@ -246,6 +255,12 @@ int gameMoviePlay(int movie, int flags)
     int v11 = 0;
     int buttons;
     do {
+
+#ifdef __3DS__
+        if (ctr_input_key_pressed())
+            break;
+#endif
+
         if (!_moviePlaying() || _game_user_wants_to_quit || inputGetInput() != -1) {
             break;
         }
@@ -297,7 +312,9 @@ int gameMoviePlay(int movie, int flags)
     if ((flags & GAME_MOVIE_PAUSE_MUSIC) != 0) {
         backgroundSoundResume();
     }
-
+#ifdef __3DS__
+    setActiveRectMap(DISPLAY_FULL);
+#endif
     if ((flags & GAME_MOVIE_FADE_OUT) != 0) {
         if (!subtitlesEnabled) {
             colorPaletteLoad("color.pal");

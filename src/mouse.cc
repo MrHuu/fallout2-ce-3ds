@@ -8,11 +8,19 @@
 #include "svga.h"
 #include "touch.h"
 
+#ifdef __3DS__
+#include "platform/ctr/ctr_input.h"
+#include "platform/ctr/ctr_rectmap.h"
+#endif
+
 namespace fallout {
 
 static void mousePrepareDefaultCursor();
 static void _mouse_anim();
 static void _mouse_clip();
+#ifdef __3DS__
+static void ctr_mouse_clip();
+#endif
 
 // The default mouse cursor buffer.
 //
@@ -429,6 +437,11 @@ void _mouse_info()
         return;
     }
 
+#ifdef __3DS__
+    if (ctr_input_frame() == 1)
+        return;
+#endif
+
     int x;
     int y;
     int buttons = 0;
@@ -548,8 +561,11 @@ void _mouse_simulate_input(int delta_x, int delta_y, int buttons)
 
         gMouseCursorX += delta_x;
         gMouseCursorY += delta_y;
+#ifdef __3DS__
+        ctr_mouse_clip();
+#else
         _mouse_clip();
-
+#endif
         windowRefreshAll(&mouseRect);
 
         mouseShowCursor();
@@ -626,6 +642,36 @@ static void _mouse_clip()
         gMouseCursorY = _scr_size.bottom - _mouse_hoty;
     }
 }
+
+#ifdef __3DS__
+static void ctr_mouse_clip()
+{
+    if (ctr_input.mode == DISPLAY_MODE_ADAPT) {
+        int src_x = rectMaps[DISPLAY_FIELD][0]->src_x;
+        int src_y = rectMaps[DISPLAY_FIELD][0]->src_y;
+        int src_w = rectMaps[DISPLAY_FIELD][0]->src_w;
+        int src_h = rectMaps[DISPLAY_FIELD][0]->src_h;
+
+        if ((ctr_rectMap.active == DISPLAY_GUI && _mouse_hoty + gMouseCursorY < 380) ||
+                ctr_rectMap.active == DISPLAY_FIELD) {
+            if (_mouse_hotx + gMouseCursorX < src_x) {
+                gMouseCursorX = src_x - _mouse_hotx;
+            } else if (_mouse_hotx + gMouseCursorX > src_x + src_w) {
+                gMouseCursorX = src_x + src_w - _mouse_hotx;
+            }
+
+            if (_mouse_hoty + gMouseCursorY < src_y) {
+                gMouseCursorY = src_y - _mouse_hoty;
+            } else if (_mouse_hoty + gMouseCursorY > src_y + (src_h-1)) {
+                gMouseCursorY = src_y + (src_h-1) - _mouse_hoty;
+            }
+            return;
+        }
+    }
+
+    _mouse_clip();
+}
+#endif
 
 // 0x4CAAA0
 int mouseGetEvent()

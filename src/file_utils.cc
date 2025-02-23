@@ -22,7 +22,9 @@ int fileCopyDecompressed(const char* existingFilePath, const char* newFilePath)
     if (stream == nullptr) {
         return -1;
     }
-
+#ifdef __3DS__
+    setvbuf(stream, NULL, _IOFBF, (32 * 1024));
+#endif
     int magic[2];
     magic[0] = fgetc(stream);
     magic[1] = fgetc(stream);
@@ -33,6 +35,9 @@ int fileCopyDecompressed(const char* existingFilePath, const char* newFilePath)
         FILE* outStream = compat_fopen(newFilePath, "wb");
 
         if (inStream != nullptr && outStream != nullptr) {
+#ifdef __3DS__
+    setvbuf(outStream, NULL, _IOFBF, (32 * 1024));
+#endif
             for (;;) {
                 int ch = gzgetc(inStream);
                 if (ch == -1) {
@@ -154,6 +159,11 @@ static void fileCopy(const char* existingFilePath, const char* newFilePath)
     FILE* out = compat_fopen(newFilePath, "wb");
     if (in != nullptr && out != nullptr) {
         std::vector<unsigned char> buffer(0xFFFF);
+
+#ifdef __3DS__
+    setvbuf(in, NULL, _IOFBF, (32 * 1024));
+    setvbuf(out, NULL, _IOFBF, (32 * 1024));
+#endif
 
         size_t bytesRead;
         while ((bytesRead = fread(buffer.data(), sizeof(*buffer.data()), buffer.size(), in)) > 0) {

@@ -392,3 +392,8 @@ FodyWeavers.xsd
 /out
 /build
 CMakeUserPresets.json
+
+# 3DS
+*.elf
+*.3dsx
+*.cia

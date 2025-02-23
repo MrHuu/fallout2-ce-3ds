@@ -8,6 +8,7 @@ static int gMouseWheelDeltaY = 0;
 // 0x4E0400
 bool directInputInit()
 {
+#ifndef __3DS__
     if (!mouseDeviceInit()) {
         goto err;
     }
@@ -15,14 +16,17 @@ bool directInputInit()
     if (!keyboardDeviceInit()) {
         goto err;
     }
-
+#endif
     return true;
 
 err:
-
+#ifdef __3DS__
+    return true;
+#else
     directInputFree();
 
     return false;
+#endif
 }
 
 // 0x4E0478
